@@ -2,9 +2,12 @@ const product = require("../Model/product");
 
 const addProduct = async (req, res) => {
   try {
+    console.log("Request body:", req.body);
+    console.log("Files:", req.files);
+    console.log("Server env:", process.env.server);
+    
     const body = req.body;
-    console.log("product : ", body);
-    let imagePaths;
+    let imagePaths = [];
     
     if(req.files && req.files.length > 0) {
       if (process.env.server == "localhost") {
@@ -13,34 +16,30 @@ const addProduct = async (req, res) => {
         imagePaths = req.files.map((file) => file.path);
       }
     } else {
-      return res.status(400).json({ error: "Please upload Images" });
+      imagePaths = ["default-image.jpg"];
     }
 
     console.log("Image paths:", imagePaths);
 
-    if (!body.Product_ID || !body.Product_Name) {
-      return res.status(400).json({ error: "Missing required fields" });
+    if (!body.Product_ID) {
+      return res.status(400).json({ error: "Product_ID is required" });
     }
 
     const target = await product.create({
       Product_ID: body.Product_ID,
-      Product_Name: body.Product_Name,
-      Product_Category: body.Product_Category,
-      Product_Price: body.Product_Price,
-      Product_Stock: body.Product_Stock,
-      Product_Status: body.Product_Status,
-      Product_Trend: body.Product_Trend,
+      Product_Name: body.Product_Name || "Default Name",
+      Product_Category: body.Product_Category || "Default Category",
+      Product_Price: body.Product_Price || "0",
+      Product_Stock: body.Product_Stock || "0",
+      Product_Status: body.Product_Status || "active",
+      Product_Trend: body.Product_Trend || "no",
       Product_Images: imagePaths
     });
 
     res.json({ message: "Product added successfully", product: target });
   } catch (err) {
     console.error("Product creation error:", err);
-    if (err.code === 11000) {
-      res.status(400).json({ error: "Product ID already exists" });
-    } else {
-      res.status(500).json({ error: "Internal server error", details: err.message });
-    }
+    res.status(500).json({ error: err.message, stack: err.stack });
   }
 }
 
