@@ -9,7 +9,7 @@ const sec = process.env.secret_key;
 
 function validateUser(req, res, next) {
     const token = req.cookies.token;
-    if (!token) return res.redirect("https://shubhangi-collections01.vercel.app/register.html");
+    if (!token) return res.status(401).json({ success: false, message: "No token found" });
 
     jwt.verify(token, sec, (err, user) => {
         if (err) {
@@ -19,7 +19,7 @@ function validateUser(req, res, next) {
   sameSite: "none", 
             });
 
-            return res.sendStatus(403);
+            return res.status(403).json({ success: false, message: "Invalid token" });
         };
         req.user = user; // decoded payload
         console.log("data from token:", user);
