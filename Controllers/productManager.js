@@ -7,9 +7,9 @@ const addProduct = async (req, res) => {
   if(req.files)
     {
           if (process.env.server == "localhost") {
-      newImage = req.files.map((file) => `/uploads/${file.filename}`);
+      imagePaths = req.files.map((file) => `/uploads/${file.filename}`);
     } else {
-      newImage = req.files.map((file) => file.path);
+      imagePaths = req.files.map((file) => file.path);
     }
     }else{
       return res.send("Please upload Images");
