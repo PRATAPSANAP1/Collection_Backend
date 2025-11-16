@@ -321,6 +321,7 @@ app.get('/:page', (req, res) => {
     
 });
 
-app.listen(3400,()=>{
-    console.log("Server started at 3400");
+const PORT = process.env.PORT || 3400;
+app.listen(PORT,()=>{
+    console.log(`Server started at ${PORT}`);
 })
