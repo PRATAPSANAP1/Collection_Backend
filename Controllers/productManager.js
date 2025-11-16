@@ -1,45 +1,46 @@
 const product = require("../Model/product");
 
 const addProduct = async (req, res) => {
-  const body = req.body;
-  console.log("product : ", body);
-  let imagePaths;
-  if(req.files)
-    {
-          if (process.env.server == "localhost") {
-      imagePaths = req.files.map((file) => `/uploads/${file.filename}`);
+  try {
+    const body = req.body;
+    console.log("product : ", body);
+    let imagePaths;
+    
+    if(req.files && req.files.length > 0) {
+      if (process.env.server == "localhost") {
+        imagePaths = req.files.map((file) => `/uploads/${file.filename}`);
+      } else {
+        imagePaths = req.files.map((file) => file.path);
+      }
     } else {
-      imagePaths = req.files.map((file) => file.path);
-    }
-    }else{
-      return res.send("Please upload Images");
+      return res.status(400).json({ error: "Please upload Images" });
     }
 
-  console.log("gffg :", imagePaths)
+    console.log("Image paths:", imagePaths);
 
-  if (body) {
-    try {
-      const target = await product.create({
-        Product_ID: body.Product_ID,
-        Product_Name: body.Product_Name,
-        Product_Category: body.Product_Category,
-        Product_Price: body.Product_Price,
-        Product_Stock: body.Product_Stock,
-        Product_Status: body.Product_Status,
-        Product_Trend: body.Product_Trend,
-        // Product_Image:req.file.filename,
-        Product_Images: imagePaths
-      })
-
-      res.send("Product added successfully");
-    } catch (err) {
-      console.log("product cha error : ", err);
-      res.send("Product already exist")
+    if (!body.Product_ID || !body.Product_Name) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
+    const target = await product.create({
+      Product_ID: body.Product_ID,
+      Product_Name: body.Product_Name,
+      Product_Category: body.Product_Category,
+      Product_Price: body.Product_Price,
+      Product_Stock: body.Product_Stock,
+      Product_Status: body.Product_Status,
+      Product_Trend: body.Product_Trend,
+      Product_Images: imagePaths
+    });
 
-  } else {
-    res.send("Product NOT received");
+    res.json({ message: "Product added successfully", product: target });
+  } catch (err) {
+    console.error("Product creation error:", err);
+    if (err.code === 11000) {
+      res.status(400).json({ error: "Product ID already exists" });
+    } else {
+      res.status(500).json({ error: "Internal server error", details: err.message });
+    }
   }
 }
 
